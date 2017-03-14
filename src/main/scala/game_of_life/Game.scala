@@ -2,19 +2,13 @@ package game_of_life
 
 import java.util.concurrent.ThreadLocalRandom
 
-import rx.lang.scala.observables.SyncOnSubscribe
-import rx.lang.scala.{Notification, Observable}
-
 import scala.collection._
 
 trait Game extends Grid {
 
   import Game._
 
-  /** Returns an observable which emits the given board and its successors while responding to backpressure. */
-  def observable(start: Board): Observable[Board] = {
-    Observable create SyncOnSubscribe.stateful(() => start)(board => Notification.OnNext(board) -> board.next)
-  }
+  def iterator(start: Board): Iterator[Board] = Iterator.iterate(start)(_.next)
 
   case class Board private(generation: Int, cells: BitSet) {
 

@@ -32,7 +32,7 @@ object Main extends App {
   val game = ConsoleGame(rows, columns)
   val render = game.render
   import game._
-  for (board <- observable(Board(setup)) take generations) {
+  for (board <- iterator(Board(setup)) take generations) {
     print(render(board))
     flush()
   }
