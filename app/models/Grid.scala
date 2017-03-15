@@ -1,6 +1,6 @@
-package game_of_life
+package models
 
-import game_of_life.Grid._
+import models.Grid._
 
 /** A grid has a number of rows and columns with iterable positions.
   * This trait is agnostic to the Game of Life itself.

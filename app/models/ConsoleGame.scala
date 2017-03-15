@@ -1,6 +1,6 @@
-package game_of_life
+package models
 
-import game_of_life.ConsoleGame._
+import models.ConsoleGame._
 
 import scala.collection.mutable
 

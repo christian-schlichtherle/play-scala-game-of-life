@@ -1,4 +1,4 @@
-package game_of_life
+package models
 
 import java.util.concurrent.ThreadLocalRandom
 

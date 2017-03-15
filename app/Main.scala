@@ -1,6 +1,5 @@
-package game_of_life
-
-import game_of_life.Game.SetupPredicate
+import models.Game.SetupPredicate
+import models.{ConsoleGame, Game}
 
 import scala.Console._
 import scala.reflect.runtime.currentMirror
