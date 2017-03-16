@@ -13,8 +13,6 @@ libraryDependencies ++= Seq(
 
 name := "play-scala-game-of-life"
 
-organization := "com.example"
-
 scalacOptions := Seq("-deprecation", "-feature", "-Xfuture")
 
 scalaVersion := "2.11.8"

@@ -1,7 +1,5 @@
 package models
 
-import models.Grid._
-
 /** A grid has a number of rows and columns with iterable positions.
   * This trait is agnostic to the Game of Life itself.
   */
@@ -17,18 +15,12 @@ trait Grid {
   @transient
   lazy val allPositions: Iterable[Position] = {
     for {
-      row <- allRows
-      column <- allColumns
+      row <- 0 until rows
+      column <- 0 until columns
     } yield {
       Position(row, column)
     }
   }
-
-  @inline
-  private def allRows = Iterable.range(0, rows)
-
-  @inline
-  private def allColumns = Iterable.range(0, columns)
 
   /** A position has a row, a column and an index with iterable neighbor positions. */
   case class Position private(row: Int, column: Int) {
@@ -39,8 +31,8 @@ trait Grid {
     @transient
     lazy val allNeighborPositions: Iterable[Position] = {
       for {
-        rowOffset <- allNeighborOffsets
-        columnOffset <- allNeighborOffsets
+        rowOffset <- -1 to 1
+        columnOffset <- -1 to 1
         if rowOffset != 0 || columnOffset != 0
       } yield {
         Position(
@@ -50,9 +42,4 @@ trait Grid {
       }
     }
   }
-}
-
-private object Grid {
-
-  private val allNeighborOffsets = Iterable.range(-1, 2)
 }
