@@ -2,19 +2,24 @@ package controllers
 
 import javax.inject._
 
+import akka.stream.Materializer
+import akka.stream.scaladsl.Source
 import models.ConsoleGame
+import play.api.http.ContentTypes
+import play.api.libs.Comet
 import play.api.mvc._
 import views.html._
 
 @Singleton
-class HomeController extends Controller {
+class HomeController @Inject()(implicit materializer: Materializer) extends Controller {
 
-  private val game = ConsoleGame(20, 200)
-  private val board2string = game.render
-  import game._
+  private val game = ConsoleGame(70, 240)
 
-  def index = Action { implicit request =>
-    val text = (game iterator Board() take 10 map board2string).mkString
-    Ok(main("Conway's Game of Life")(pre(text)))
-  }
+  private val board2string = game.render andThen (_ substring 1)
+
+  private lazy val source = Source.fromIterator(() => game iterator game.Board() map board2string)
+
+  def index = Action { Ok(board()) }
+
+  def comet = Action { Ok.chunked(source via (Comet string "parent.setBoardHtml")) as ContentTypes.HTML }
 }
