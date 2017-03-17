@@ -3,6 +3,6 @@
 # https://www.playframework.com/documentation/latest/ScalaRouting
 # ~~~~
 
-GET        /                    controllers.HomeController.index
-GET        /boards              controllers.HomeController.boards
+GET        /                    controllers.GameController.index
+GET        /boards              controllers.GameController.boards
 GET        /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)
