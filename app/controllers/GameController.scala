@@ -3,13 +3,15 @@ package controllers
 import java.util.Locale
 import javax.inject._
 
-import akka.stream.scaladsl.Source
+import akka.NotUsed
+import akka.stream.scaladsl.{Flow, Source}
 import com.typesafe.config.Config
 import controllers.GameController._
 import models.Game.SetupPredicate
 import models.{ConsoleGame, Game}
 import play.api.http.ContentTypes
 import play.api.libs.EventSource
+import play.api.libs.EventSource.Event
 import play.api.mvc._
 
 import scala.reflect.runtime.currentMirror
@@ -22,13 +24,23 @@ class GameController @Inject()(context: Context) extends Controller {
 
   private val game = ConsoleGame(rows, columns)
 
-  private lazy val source = {
-    Source fromIterator (() => game iterator game.Board(setup) take generations map (game render _ substring 1))
+  private lazy val events = boardEvents concat closeEvent
+
+  private def boardEvents = {
+    Source
+      .fromIterator(() => game iterator game.Board(setup))
+      .take(generations)
+      .map(game render _ substring 1)
+      .map(Event(_))
   }
 
-  def boards = Action { Ok(views.html.boards()) }
+  private def closeEvent = Source single Event(data = "close", id = None, name = Some("close"))
 
-  def stream = Action { Ok chunked (source via EventSource.flow) as ContentTypes.EVENT_STREAM }
+  def boards: Action[AnyContent] = Action { Ok(views.html.boards()) }
+
+  def stream: Action[AnyContent] = {
+    Action { Ok chunked (events via Flow[Event]) as ContentTypes.EVENT_STREAM }
+  }
 }
 
 object GameController {

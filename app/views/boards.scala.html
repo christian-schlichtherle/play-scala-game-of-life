@@ -2,9 +2,13 @@
     <pre id="board"></pre>
     <script type="text/javascript">
             if (typeof(EventSource) !== "undefined") {
-                new EventSource("@routes.GameController.stream").onmessage = function(event) {
+                var source = new EventSource("@routes.GameController.stream");
+                source.addEventListener('message', function(event) {
                     document.getElementById("board").innerHTML = event.data;
-                };
+                });
+                source.addEventListener('close', function(event) {
+                    source.close();
+                });
             } else {
                 document.getElementById("board").innerHTML = "Sorry. This browser doesn't seem to support Server sent event. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
             }
