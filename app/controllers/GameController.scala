@@ -6,12 +6,11 @@ import javax.inject._
 import akka.stream.scaladsl.Source
 import com.typesafe.config.Config
 import controllers.GameController._
-import models.{ConsoleGame, Game}
 import models.Game.SetupPredicate
+import models.{ConsoleGame, Game}
 import play.api.http.ContentTypes
 import play.api.libs.EventSource
 import play.api.mvc._
-import views.html._
 
 import scala.reflect.runtime.currentMirror
 import scala.tools.reflect.ToolBox
@@ -27,9 +26,9 @@ class GameController @Inject()(context: Context) extends Controller {
     Source fromIterator (() => game iterator game.Board(setup) take generations map (game render _ substring 1))
   }
 
-  def index = Action { Ok(board()) }
+  def boards = Action { Ok(views.html.boards()) }
 
-  def boards = Action { Ok chunked (source via EventSource.flow) as ContentTypes.EVENT_STREAM }
+  def stream = Action { Ok chunked (source via EventSource.flow) as ContentTypes.EVENT_STREAM }
 }
 
 object GameController {
