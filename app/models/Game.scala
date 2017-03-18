@@ -1,14 +1,26 @@
 package models
 
+import java.util.Locale
 import java.util.concurrent.ThreadLocalRandom
 
-import scala.collection._
+import com.typesafe.config.Config
+import models.Game.SetupPredicate
+import play.api.mvc.QueryStringBindable
 
-trait Game extends Grid {
+import scala.collection.BitSet
 
-  import Game._
+import scala.reflect.runtime.currentMirror
+import scala.tools.reflect.ToolBox
 
-  def iterator(start: Board): Iterator[Board] = Iterator.iterate(start)(_.next)
+case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupPredicate = Game.random) extends Grid with Equals {
+
+  require(rows >= 2)
+  require(columns >= 2)
+
+  def iterator: Iterator[Board] = {
+    val it = Iterator.iterate(Board())(_.next)
+    generations map it.take getOrElse it
+  }
 
   case class Board private(generation: Int, cells: BitSet) {
 
@@ -29,12 +41,8 @@ trait Game extends Grid {
 
   object Board {
 
-    def apply(setup: SetupPredicate = random): Board = {
-      apply(position => setup(position.row, position.column))
-    }
-
-    def apply(setup: Position => Boolean): Board = {
-      val cells = (BitSet.empty /: (allPositions filter setup))(_ + _.index)
+    def apply(): Board = {
+      val cells = (BitSet.empty /: (allPositions filter (p => setup(p.row, p.column))))(_ + _.index)
         .ensuring(cells => cells.isEmpty || 0 <= cells.min)
         .ensuring(cells => cells.isEmpty || cells.max < size)
       new Board(1, cells)
@@ -45,6 +53,56 @@ trait Game extends Grid {
 object Game {
 
   type SetupPredicate = (Int, Int) => Boolean
+
+  def apply(config: Config): Game = {
+    import config._
+
+    def setup: SetupPredicate = {
+      getString("setup") toLowerCase Locale.ENGLISH match {
+        case "random" => Game.random
+        case "blinkers" => Game.blinkers
+        case other => eval("($r: Int, $c: Int) => { " + other + " }: Boolean")
+      }
+    }
+
+    Game(
+      rows = getInt("rows"),
+      columns = getInt("columns"),
+      generations = Some(getInt("generations")),
+      setup = setup
+    )
+  }
+
+  implicit def queryStringBindable(implicit intBinder: QueryStringBindable[Int]): QueryStringBindable[Game] = {
+    new QueryStringBindable[Game] {
+
+      def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Game]] = {
+        for {
+          rows <- intBinder.bind(key + ".rows", params)
+          columns <- intBinder.bind(key + ".columns", params)
+          generations <- intBinder.bind(key + ".generations", params)
+        } yield {
+          (rows, columns, generations) match {
+            case (Right(r), Right(c), Right(g)) => Right(Game(rows = r, columns = c, generations = Some(g)))
+            case _ => Left("Unable to bind a Context.")
+          }
+        }
+      }
+
+      override def unbind(key: String, context: Game): String = {
+        import context._
+        intBinder.unbind(key + ".rows", rows) + "&" +
+          intBinder.unbind(key + ".columns", columns) + "&" +
+          intBinder.unbind(key + ".generations", generations.get)
+      }
+    }
+  }
+
+  private def eval[A](string: String): A = {
+    val tb = currentMirror mkToolBox ()
+    val tree = tb parse string
+    (tb eval tree).asInstanceOf[A]
+  }
 
   def random(row: Int, column: Int): Boolean = ThreadLocalRandom.current nextBoolean ()
 

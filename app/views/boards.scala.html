@@ -1,9 +1,9 @@
-@(context: GameController.Context)
+@(game: Game)
 @main("Conway's Game of Life") {
     <pre id="board"></pre>
     <script type="text/javascript">
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource("@(routes.GameController stream context)");
+                var source = new EventSource("@(routes.GameController stream game)");
                 source.addEventListener('message', function(event) {
                     document.getElementById("board").innerHTML = event.data;
                 });

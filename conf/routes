@@ -4,6 +4,6 @@
 # ~~~~
 
 GET        /                    controllers.GameController.boards
-GET        /stream              controllers.GameController.stream(c: controllers.GameController.Context)
+GET        /stream              controllers.GameController.stream(g: models.Game)
 
 GET        /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)
