@@ -26,7 +26,7 @@ trait Grid {
   case class Position private(row: Int, column: Int) {
 
     @transient
-    lazy val index: Int = row * columns + column
+    val index: Int = row * columns + column
 
     @transient
     lazy val allNeighborPositions: Iterable[Position] = {
