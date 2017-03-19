@@ -8,13 +8,20 @@ import play.api.http.ContentTypes
 import play.api.libs.EventSource.Event
 import play.api.mvc._
 import views.Game2String
+import GameController._
 
 @Singleton
-class GameController @Inject()(game: Game) extends Controller {
+class GameController @Inject()(default: Game) extends Controller {
 
-  private lazy val closeEvent = Source single Event(data = "close", id = None, name = Some("close"))
-
-  def boards: Action[AnyContent] = Action { Ok(views.html.boards(game)) }
+  def boards(game: Option[Game]): Action[AnyContent] = {
+    Action {
+      game map { game =>
+        Ok(views.html.boards(game))
+      } getOrElse {
+        Redirect(routes.GameController.boards(Some(default)))
+      }
+    }
+  }
 
   def stream(game: Game): Action[AnyContent] = {
     Action {
@@ -24,4 +31,9 @@ class GameController @Inject()(game: Game) extends Controller {
       Ok chunked (events via Flow[Event]) as ContentTypes.EVENT_STREAM
     }
   }
+}
+
+private object GameController {
+
+  private lazy val closeEvent = Source single Event(data = "close", id = None, name = Some("close"))
 }

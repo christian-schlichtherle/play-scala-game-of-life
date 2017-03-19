@@ -16,6 +16,7 @@ case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupP
 
   require(rows >= 2)
   require(columns >= 2)
+  generations foreach (g => require(g > 0))
 
   def iterator: Iterator[Board] = {
     val it = Iterator.iterate(Board())(_.next)
