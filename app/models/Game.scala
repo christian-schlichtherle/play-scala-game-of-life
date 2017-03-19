@@ -61,7 +61,7 @@ object Game {
       getString("setup") toLowerCase Locale.ENGLISH match {
         case "random" => Game.random
         case "blinkers" => Game.blinkers
-        case other => eval("($r: Int, $c: Int) => { " + other + " }: Boolean")
+        case other => evaluate("($r: Int, $c: Int) => { " + other + " }: Boolean")
       }
     }
 
@@ -73,7 +73,13 @@ object Game {
     )
   }
 
-  implicit def queryStringBindable(implicit intBinder: QueryStringBindable[Int]): QueryStringBindable[Game] = {
+  private def evaluate[A](string: String): A = {
+    val tb = currentMirror mkToolBox ()
+    val tree = tb parse string
+    (tb eval tree).asInstanceOf[A]
+  }
+
+  implicit def binder(implicit intBinder: QueryStringBindable[Int]): QueryStringBindable[Game] = {
     new QueryStringBindable[Game] {
 
       def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Game]] = {
@@ -96,12 +102,6 @@ object Game {
           intBinder.unbind(key + ".generations", generations.get)
       }
     }
-  }
-
-  private def eval[A](string: String): A = {
-    val tb = currentMirror mkToolBox ()
-    val tree = tb parse string
-    (tb eval tree).asInstanceOf[A]
   }
 
   def random(row: Int, column: Int): Boolean = ThreadLocalRandom.current nextBoolean ()
