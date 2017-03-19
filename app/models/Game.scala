@@ -43,8 +43,7 @@ case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupP
 
     def apply(): Board = {
       val cells = (BitSet.empty /: (allPositions filter (p => setup(p.row, p.column))))(_ + _.index)
-        .ensuring(cells => cells.isEmpty || 0 <= cells.min)
-        .ensuring(cells => cells.isEmpty || cells.max < size)
+        .ensuring(cells => cells.isEmpty || (0 <= cells.min && cells.max < size))
       new Board(1, cells)
     }
   }
