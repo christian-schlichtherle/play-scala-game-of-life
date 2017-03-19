@@ -68,7 +68,7 @@ object Game {
     Game(
       rows = getInt("rows"),
       columns = getInt("columns"),
-      generations = Some(getInt("generations")),
+      generations = Some(getInt("generations")) filter (_ > 0),
       setup = setup
     )
   }
@@ -79,17 +79,20 @@ object Game {
     (tb eval tree).asInstanceOf[A]
   }
 
-  implicit def binder(implicit intBinder: QueryStringBindable[Int]): QueryStringBindable[Game] = {
+  implicit val binder: QueryStringBindable[Game] = {
     new QueryStringBindable[Game] {
+
+      private val intBinder = implicitly[QueryStringBindable[Int]]
+      private val optionIntBinder = implicitly[QueryStringBindable[Option[Int]]]
 
       def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Game]] = {
         for {
           rows <- intBinder.bind(key + ".rows", params)
           columns <- intBinder.bind(key + ".columns", params)
-          generations <- intBinder.bind(key + ".generations", params)
+          generations <- optionIntBinder.bind(key + ".generations", params)
         } yield {
           (rows, columns, generations) match {
-            case (Right(r), Right(c), Right(g)) => Right(Game(rows = r, columns = c, generations = Some(g)))
+            case (Right(r), Right(c), Right(g)) => Right(Game(rows = r, columns = c, generations = g))
             case _ => Left("Unable to bind a Context.")
           }
         }
@@ -98,8 +101,8 @@ object Game {
       override def unbind(key: String, context: Game): String = {
         import context._
         intBinder.unbind(key + ".rows", rows) + "&" +
-          intBinder.unbind(key + ".columns", columns) + "&" +
-          intBinder.unbind(key + ".generations", generations.get)
+          intBinder.unbind(key + ".columns", columns) +
+          (generations map ("&" + intBinder.unbind(key + ".generations", _)) getOrElse "")
       }
     }
   }
