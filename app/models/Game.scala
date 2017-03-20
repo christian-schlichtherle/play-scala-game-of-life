@@ -23,10 +23,13 @@ case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupP
     generations map it.take getOrElse it
   }
 
-  case class Board private(generation: Int, cells: BitSet) {
+  case class Board private(cells: BitSet, generation: Int) {
 
     def next: Board = {
-      copy(generation = generation + 1, cells = (BitSet.empty /: (allPositions filter nextAlive))(_ + _.index))
+      copy(
+        cells = (BitSet.empty /: (allPositions filter nextAlive)) (_ + _.index),
+        generation = generation + 1
+      )
     }
 
     private def nextAlive(position: Position) = {
@@ -43,9 +46,9 @@ case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupP
   object Board {
 
     def apply(): Board = {
-      val cells = (BitSet.empty /: (allPositions filter (p => setup(p.row, p.column))))(_ + _.index)
+      val cells = (BitSet.empty /: (allPositions filter (p => setup(p.row, p.column)))) (_ + _.index)
         .ensuring(cells => cells.isEmpty || (0 <= cells.min && cells.max < size))
-      new Board(1, cells)
+      new Board(cells, 1)
     }
   }
 }
