@@ -2,8 +2,8 @@
 @main("Conway's Game of Life") {
     <pre id="board"></pre>
     <script type="text/javascript">
-            if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource("@(routes.GameController stream game)");
+            if (typeof(EventSource) !== undefined) {
+                var source = new EventSource('@routes.GameController.stream(game)');
                 source.addEventListener('message', function(event) {
                     document.getElementById("board").innerHTML = event.data;
                 });
@@ -11,7 +11,7 @@
                     source.close();
                 });
             } else {
-                document.getElementById("board").innerHTML = "Sorry. This browser doesn't seem to support Server sent event. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
+                document.getElementById("board").innerHTML = "Sorry. This browser doesn't seem to support server sent events. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
             }
     </script>
 }
