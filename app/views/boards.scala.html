@@ -1,11 +1,26 @@
 @(game: Game)
 @main("Conway's Game of Life") {
     <pre id="board"></pre>
+    <div id="fps"></div>
     <script type="text/javascript">
             if (typeof(EventSource) !== undefined) {
                 var source = new EventSource('@routes.GameController.stream(game)');
+                goog.require('goog.math');
+                var boardTag = document.getElementById("board");
+                var fpsTag = document.getElementById("fps");
+                var count = 0;
+                var fps = [];
+                var t0 = performance.now();
                 source.addEventListener('message', function(event) {
-                    document.getElementById("board").innerHTML = event.data;
+                    var t1 = performance.now();
+                    var last = 1e3 / (t1 - t0);
+                    fps[count] = last;
+                    count = (count + 1) % 10;
+                    var avg = goog.math.average.apply(null, fps);
+                    var sd = goog.math.standardDeviation.apply(null, fps);
+                    boardTag.innerHTML = event.data;
+                    fpsTag.innerHTML = "FPS: avg " + avg.toFixed(2) + ", stddev " + sd.toFixed(2) + ", last " + last.toFixed(2);
+                    t0 = t1;
                 });
                 source.addEventListener('close', function(event) {
                     source.close();
