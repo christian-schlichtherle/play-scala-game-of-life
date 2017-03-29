@@ -101,8 +101,8 @@ object Game {
         }
       }
 
-      override def unbind(key: String, context: Game): String = {
-        import context._
+      override def unbind(key: String, game: Game): String = {
+        import game._
         intBinder.unbind(key + ".rows", rows) + "&" +
           intBinder.unbind(key + ".columns", columns) +
           (generations map ("&" + intBinder.unbind(key + ".generations", _)) getOrElse "")
