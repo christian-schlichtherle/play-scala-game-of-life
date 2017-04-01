@@ -95,8 +95,14 @@ object Game {
           generations <- optionIntBinder.bind(key + ".generations", params)
         } yield {
           (rows, columns, generations) match {
-            case (Right(r), Right(c), Right(g)) => Right(Game(rows = r, columns = c, generations = g filter (_ > 0)))
-            case _ => Left("Unable to bind a Context.")
+            case (Right(r), Right(c), Right(g)) =>
+              try {
+                Right(Game(rows = r, columns = c, generations = g))
+              } catch {
+                case e: IllegalArgumentException => Left(e.toString)
+              }
+            case _ =>
+              Left("Unable to bind a Context.")
           }
         }
       }
