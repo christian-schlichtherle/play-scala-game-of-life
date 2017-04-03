@@ -3,7 +3,9 @@
     <pre id="board"></pre>
     <div id="fps"></div>
     <script type="text/javascript">
-            if (typeof(EventSource) !== undefined) {
+            if (typeof(EventSource) === undefined) {
+                document.getElementById("board").innerHTML = "Sorry. This browser doesn't seem to support server sent events. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
+            } else {
                 var source = new EventSource('@routes.GameController.stream(game)');
                 goog.require('goog.math');
                 var boardTag = document.getElementById("board");
@@ -11,7 +13,7 @@
                 var count = 0;
                 var fps = [];
                 var t0 = performance.now();
-                source.addEventListener('message', function(event) {
+                source.addEventListener('message', function (event) {
                     var t1 = performance.now();
                     var last = 1e3 / (t1 - t0);
                     fps[count] = last;
@@ -22,11 +24,9 @@
                     fpsTag.innerHTML = "FPS: avg " + avg.toFixed(2) + ", stddev " + sd.toFixed(2) + ", last " + last.toFixed(2);
                     t0 = t1;
                 });
-                source.addEventListener('close', function(event) {
+                source.addEventListener('close', function (event) {
                     source.close();
                 });
-            } else {
-                document.getElementById("board").innerHTML = "Sorry. This browser doesn't seem to support server sent events. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
             }
     </script>
 }
