@@ -8,7 +8,6 @@ import play.api.http.ContentTypes
 import play.api.libs.EventSource.Event
 import play.api.mvc._
 import views.Game2String
-import GameController._
 
 @Singleton
 class GameController @Inject()(default: Game) extends Controller {
@@ -26,14 +25,8 @@ class GameController @Inject()(default: Game) extends Controller {
   def stream(game: Game): Action[AnyContent] = {
     Action {
       val view = Game2String(game) _ andThen (_ substring 1) andThen Event[String]
-      val boardEvents = Source fromIterator (() => game.iterator) map view
-      val events = boardEvents concat closeEvent
+      val events = Source fromIterator (() => game.iterator) map view
       Ok chunked (events via Flow[Event]) as ContentTypes.EVENT_STREAM
     }
   }
-}
-
-private object GameController {
-
-  private lazy val closeEvent = Source single Event(data = "close", id = None, name = Some("close"))
 }
