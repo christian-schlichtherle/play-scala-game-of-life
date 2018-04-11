@@ -6,7 +6,7 @@
             if (typeof(EventSource) === undefined) {
                 document.getElementById("board").innerHTML = "Sorry. This browser doesn't seem to support server sent events. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
             } else {
-                var source = new EventSource('@routes.GameController.stream(game)');
+                var source = new EventSource("@Html(routes.GameController.stream(game).toString)");
                 goog.require('goog.math');
                 var boardTag = document.getElementById("board");
                 var fpsTag = document.getElementById("fps");

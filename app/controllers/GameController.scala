@@ -9,8 +9,7 @@ import play.api.libs.EventSource.Event
 import play.api.mvc._
 import views.Game2String
 
-@Singleton
-class GameController @Inject()(default: Game) extends Controller {
+class GameController @Inject()(default: Game, val controllerComponents: ControllerComponents) extends BaseController {
 
   def boards(game: Option[Game]): Action[AnyContent] = {
     Action {
