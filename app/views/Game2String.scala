@@ -15,7 +15,7 @@ object Game2String {
   private val lineSeparator = '\n'
 
   private val generationFormats = {
-    Stream(
+    LazyList(
       s"$horizontal Generation: %s $horizontal",
       " Generation: %s ",
       "Generation: %s",
@@ -32,32 +32,33 @@ object Game2String {
   def apply(game: Game)(board: game.Board): String = {
     import game._
 
-    val allRows = 0 until rows
-    val allColumns = 0 until columns
-    val stringLength = (rows + 2) * (columns + 3)
-    val stringBuilder = new StringBuilder(stringLength)
+    val allRows = 0.until(rows)
+    val allColumns = 0.until(columns)
+    val length = (rows + 2) * (columns + 3)
+    val builder = new StringBuilder(length)
 
     import board._
+    import builder._
 
-    stringBuilder append lineSeparator append downAndRight
-    allColumns foreach (_ => stringBuilder append horizontal)
-    stringBuilder append downAndLeft append lineSeparator
+    append(lineSeparator).append(downAndRight)
+    allColumns.foreach(_ => append(horizontal))
+    append(downAndLeft).append(lineSeparator)
     for (row <- allRows) {
-      stringBuilder append '│'
+      append(vertical)
       for (column <- allColumns) {
-        stringBuilder append (if (alive(Position(row, column))) aliveCell else deadCell)
+        append(if (alive(Position(row, column))) aliveCell else deadCell)
       }
-      stringBuilder append vertical append lineSeparator
+      append(vertical).append(lineSeparator)
     }
-    stringBuilder append upAndRight
+    append(upAndRight)
     generationFormats
-      .map(_ format generation)
+      .map(_.format(generation))
       .find(_.length <= columns)
       .foreach { generationString =>
-        stringBuilder append generationString
-        0 until columns - generationString.length foreach (_ => stringBuilder append horizontal)
+        append(generationString)
+        0.until(columns - generationString.length).foreach(_ => append(horizontal))
       }
-    stringBuilder append upAndLeft
-    stringBuilder.toString ensuring (_.length == stringLength)
+    append(upAndLeft)
+    builder.toString.ensuring(_.length == length)
   }
 }

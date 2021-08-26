@@ -1,13 +1,14 @@
 package modules
 
-import com.google.inject.{AbstractModule, Provides}
-import com.typesafe.config.Config
 import models.Game
+import play.api.inject._
+import play.api._
 
-class WebModule extends AbstractModule {
+class WebModule extends Module {
 
-  def configure(): Unit = { }
-
-  @Provides
-  def game(config: Config): Game = Game(config getConfig "game")
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
+    Seq(
+      bind[Game].to(Game(configuration.underlying.getConfig("game")))
+    )
+  }
 }

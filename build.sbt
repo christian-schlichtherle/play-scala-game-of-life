@@ -1,21 +1,22 @@
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val root = project
+  .in(file("."))
+  .enablePlugins(PlayScala)
+  .settings(
+    fork := true, // required to make Ctl-C work and respect `javaOptions`
+    javaOptions := Seq("-ea"),
+    libraryDependencies ++= Seq(
+      filters,
+      guice,
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+      "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test,
+      "org.webjars.npm" % "google-closure-library" % "20170124.0.0",
+    ),
+    name := "play-scala-game-of-life",
+    scalacOptions := Seq("-deprecation", "-feature"),
+    scalaVersion := "2.13.6",
+    version := "0.1.1-SNAPSHOT",
 
-fork in Test := true
-
-javaOptions in Test := Seq("-ea")
-
-libraryDependencies ++= Seq(
-  guice,
-  "javax.xml.bind" % "jaxb-api" % "2.3.0" % Runtime,
-  "org.webjars.npm" % "google-closure-library" % "20170124.0.0",
-  "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
-)
-
-name := "play-scala-game-of-life"
-
-scalacOptions := Seq("-deprecation", "-feature", "-Xfuture")
-
-scalaVersion := "2.11.12" // significantly faster than 2.12.5
-
-version := "0.1.0-SNAPSHOT"
+    // http://www.scalatest.org/user_guide/using_scalatest_with_sbt
+    Test / logBuffered := false,
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
+  )

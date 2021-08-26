@@ -1,39 +1,38 @@
 package models
 
-import java.util.Locale
-import java.util.concurrent.ThreadLocalRandom
-
 import com.typesafe.config.Config
 import models.Game.SetupPredicate
 import play.api.mvc.QueryStringBindable
 
-import scala.collection.BitSet
-
+import java.util.Locale
+import java.util.concurrent.ThreadLocalRandom
+import scala.collection.immutable.BitSet
 import scala.reflect.runtime.currentMirror
 import scala.tools.reflect.ToolBox
+import scala.util.Try
 
-case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupPredicate = Game.random) extends Grid with Equals {
+final case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupPredicate = Game.random) extends Grid with Equals {
 
   require(rows >= 2)
   require(columns >= 2)
-  generations foreach (g => require(g > 0))
+  generations.foreach(g => require(g > 0))
 
   def iterator: Iterator[Board] = {
     val it = Iterator.iterate(Board())(_.next)
-    generations map it.take getOrElse it
+    generations.map(it.take).getOrElse(it)
   }
 
-  case class Board private(cells: BitSet, generation: Int) {
+  final case class Board private(cells: BitSet, generation: Int) {
 
     def next: Board = {
       copy(
-        cells = (BitSet.empty /: (allPositions filter nextAlive)) (_ + _.index),
+        cells = allPositions.filter(nextAlive).foldLeft(BitSet.empty)(_ + _.index),
         generation = generation + 1
       )
     }
 
     private def nextAlive(position: Position) = {
-      position.allNeighborPositions count alive match {
+      position.allNeighborPositions.count(alive) match {
         case 2 => alive(position)
         case 3 => true
         case _ => false
@@ -46,7 +45,7 @@ case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupP
   object Board {
 
     def apply(): Board = {
-      val cells = (BitSet.empty /: (allPositions filter (p => setup(p.row, p.column)))) (_ + _.index)
+      val cells = allPositions.filter(p => setup(p.row, p.column)).foldLeft(BitSet.empty)(_ + _.index)
         .ensuring(cells => cells.isEmpty || (0 <= cells.min && cells.max < size))
       new Board(cells, 1)
     }
@@ -61,7 +60,7 @@ object Game {
     import config._
 
     def setup: SetupPredicate = {
-      getString("setup") toLowerCase Locale.ENGLISH match {
+      getString("setup").toLowerCase(Locale.ENGLISH) match {
         case "random" => Game.random
         case "blinkers" => Game.blinkers
         case other => evaluate("($r: Int, $c: Int) => { " + other + " }: Boolean")
@@ -71,52 +70,48 @@ object Game {
     Game(
       rows = getInt("rows"),
       columns = getInt("columns"),
-      generations = Some(getInt("generations")) filter (_ > 0),
+      generations = Some(getInt("generations")).filter(_ > 0),
       setup = setup
     )
   }
 
   private def evaluate[A](string: String): A = {
-    val tb = currentMirror mkToolBox ()
-    val tree = tb parse string
-    (tb eval tree).asInstanceOf[A]
+    val tb = currentMirror.mkToolBox()
+    val tree = tb.parse(string)
+    tb.eval(tree).asInstanceOf[A]
   }
 
-  implicit val binder: QueryStringBindable[Game] = {
-    new QueryStringBindable[Game] {
+  implicit object gameBinder extends QueryStringBindable[Game] {
 
-      private val intBinder = implicitly[QueryStringBindable[Int]]
-      private val optionIntBinder = implicitly[QueryStringBindable[Option[Int]]]
+    private val intBinder = implicitly[QueryStringBindable[Int]]
+    private val optionIntBinder = implicitly[QueryStringBindable[Option[Int]]]
 
-      def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Game]] = {
+    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Game]] = {
+      for {
+        rows <- intBinder.bind(key + ".rows", params)
+        colums <- intBinder.bind(key + ".columns", params)
+        generations <- optionIntBinder.bind(key + ".generations", params)
+      } yield {
         for {
-          rows <- intBinder.bind(key + ".rows", params)
-          columns <- intBinder.bind(key + ".columns", params)
-          generations <- optionIntBinder.bind(key + ".generations", params)
+          r <- rows
+          c <- colums
+          g <- generations
+          game <- Try(Game(rows = r, columns = c, generations = g)).toEither.left.map(_.toString)
         } yield {
-          (rows, columns, generations) match {
-            case (Right(r), Right(c), Right(g)) =>
-              try {
-                Right(Game(rows = r, columns = c, generations = g))
-              } catch {
-                case e: IllegalArgumentException => Left(e.toString)
-              }
-            case _ =>
-              Left("Unable to bind a Context.")
-          }
+          game
         }
       }
+    }
 
-      override def unbind(key: String, game: Game): String = {
-        import game._
-        intBinder.unbind(key + ".rows", rows) + "&" +
-          intBinder.unbind(key + ".columns", columns) +
-          (generations map ("&" + intBinder.unbind(key + ".generations", _)) getOrElse "")
-      }
+    override def unbind(key: String, value: Game): String = {
+      import value._
+      intBinder.unbind(key + ".rows", rows) +
+        "&" + intBinder.unbind(key + ".columns", columns) +
+        generations.map("&" + intBinder.unbind(key + ".generations", _)).getOrElse("")
     }
   }
 
-  def random(row: Int, column: Int): Boolean = ThreadLocalRandom.current nextBoolean ()
+  def random(row: Int, column: Int): Boolean = ThreadLocalRandom.current.nextBoolean()
 
   def blinkers(row: Int, column: Int): Boolean = row % 4 == 1 && column % 4 < 3
 }

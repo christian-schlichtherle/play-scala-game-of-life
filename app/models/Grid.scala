@@ -15,8 +15,8 @@ trait Grid {
   @transient
   lazy val allPositions: Iterable[Position] = {
     for {
-      row <- 0 until rows
-      column <- 0 until columns
+      row <- 0.until(rows)
+      column <- 0.until(columns)
     } yield {
       Position(row, column)
     }
