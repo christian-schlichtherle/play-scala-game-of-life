@@ -32,8 +32,8 @@ object Game2String {
   def apply(game: Game)(board: game.Board): String = {
     import game._
 
-    val allRows = 0.until(rows)
-    val allColumns = 0.until(columns)
+    val allRows = 0 until rows
+    val allColumns = 0 until columns
     val length = (rows + 2) * (columns + 3)
     val builder = new StringBuilder(length)
 
@@ -43,11 +43,9 @@ object Game2String {
     append(lineSeparator).append(downAndRight)
     allColumns.foreach(_ => append(horizontal))
     append(downAndLeft).append(lineSeparator)
-    for (row <- allRows) {
+    allRows.foreach { row =>
       append(vertical)
-      for (column <- allColumns) {
-        append(if (alive(Position(row, column))) aliveCell else deadCell)
-      }
+      allColumns.foreach(column => append(if (alive(Position(row, column))) aliveCell else deadCell))
       append(vertical).append(lineSeparator)
     }
     append(upAndRight)

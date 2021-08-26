@@ -9,14 +9,12 @@ trait Grid {
 
   val columns: Int
 
-  @transient
   lazy val size: Int = rows * columns
 
-  @transient
   lazy val allPositions: Iterable[Position] = {
     for {
-      row <- 0.until(rows)
-      column <- 0.until(columns)
+      row <- 0 until rows
+      column <- 0 until columns
     } yield {
       Position(row, column)
     }
@@ -25,10 +23,8 @@ trait Grid {
   /** A position has a row, a column and an index with iterable neighbor positions. */
   case class Position private(row: Int, column: Int) {
 
-    @transient
     val index: Int = row * columns + column
 
-    @transient
     lazy val allNeighborPositions: Iterable[Position] = {
       for {
         rowOffset <- -1 to 1

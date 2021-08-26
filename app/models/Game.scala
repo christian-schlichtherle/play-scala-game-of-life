@@ -11,7 +11,8 @@ import scala.reflect.runtime.currentMirror
 import scala.tools.reflect.ToolBox
 import scala.util.Try
 
-final case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupPredicate = Game.random) extends Grid with Equals {
+final case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupPredicate = Game.random)
+  extends Grid {
 
   require(rows >= 2)
   require(columns >= 2)
