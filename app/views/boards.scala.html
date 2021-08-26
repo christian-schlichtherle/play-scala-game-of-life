@@ -7,22 +7,19 @@
                 document.getElementById("board").innerHTML = "Sorry. This browser doesn't seem to support server sent events. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
             } else {
                 var source = new EventSource("@Html(routes.GameController.stream(game).toString)");
-                goog.require('goog.math');
                 var boardTag = document.getElementById("board");
                 var fpsTag = document.getElementById("fps");
-                var count = 0;
-                var fps = [];
-                var t0 = performance.now();
+                var times = [];
+                var index = 0;
+                times[index++] = performance.now();
                 source.addEventListener('message', function (event) {
-                    var t1 = performance.now();
-                    var last = 1e3 / (t1 - t0);
-                    fps[count] = last;
-                    count = (count + 1) % 10;
-                    var avg = goog.math.average.apply(null, fps);
-                    var sd = goog.math.standardDeviation.apply(null, fps);
                     boardTag.innerHTML = event.data;
-                    fpsTag.innerHTML = "FPS: avg " + avg.toFixed(2) + ", stddev " + sd.toFixed(2) + ", last " + last.toFixed(2);
-                    t0 = t1;
+                    var now = performance.now();
+                    times[index] = now;
+                    var then = times[(index + 1) % times.length];
+                    index = (index + 1) % 100;
+                    var fps = 1e3 * times.length / (now - then)
+                    fpsTag.innerHTML = "FPS: " + fps.toFixed(1);
                 });
                 source.addEventListener('close', function (event) {
                     source.close();

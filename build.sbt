@@ -9,7 +9,6 @@ lazy val root = project
       guice,
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test,
-      "org.webjars.npm" % "google-closure-library" % "20170124.0.0",
     ),
     name := "play-scala-game-of-life",
     scalacOptions := Seq("-deprecation", "-feature"),
