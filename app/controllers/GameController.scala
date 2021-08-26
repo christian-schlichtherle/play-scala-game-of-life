@@ -8,6 +8,7 @@ import play.api.mvc._
 import views.Game2String
 
 import javax.inject._
+import scala.concurrent.duration._
 
 @Singleton
 class GameController @Inject()(default: Game, cc: ControllerComponents) extends AbstractController(cc) {
@@ -24,9 +25,15 @@ class GameController @Inject()(default: Game, cc: ControllerComponents) extends 
 
   def stream(game: Game): Action[AnyContent] = {
     Action {
-      val view = (Game2String(game) _).andThen(_.substring(1)).andThen(Event[String])
-      val events = Source.fromIterator(() => game.iterator).map(view)
-      Ok.chunked(events.via(Flow[Event])).as(ContentTypes.EVENT_STREAM)
+      val view = (Game2String(game)(_: game.Board).substring(1)).andThen(Event[String])
+      val events = Source
+        .fromIterator(() => game.iterator)
+        .grouped(3)
+        .takeWhile(seq => seq.map(_.cells).toSet.size == seq.size) // detect blinkers
+        .flatMapConcat(Source.apply)
+        .map(view)
+        .throttle(30, 1.second) // frames per second
+      Ok.chunked(events, Some(ContentTypes.EVENT_STREAM))
     }
   }
 }

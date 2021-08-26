@@ -21,7 +21,7 @@ trait Grid {
   }
 
   /** A position has a row, a column and an index with iterable neighbor positions. */
-  case class Position private(row: Int, column: Int) {
+  final case class Position private(row: Int, column: Int) {
 
     val index: Int = row * columns + column
 
