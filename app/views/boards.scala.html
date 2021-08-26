@@ -1,28 +1,52 @@
 @(game: Game)
 @main("Conway's Game of Life") {
     <pre id="board"></pre>
-    <div id="fps"></div>
+    <pre id="stats"></pre>
     <script type="text/javascript">
-            if (typeof(EventSource) === undefined) {
-                document.getElementById("board").innerHTML = "Sorry. This browser doesn't seem to support server sent events. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
+            if (typeof (EventSource) === undefined) {
+                document.getElementById('board').innerHTML =
+                        "Sorry. This browser doesn't seem to support server sent events. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
             } else {
-                var source = new EventSource("@Html(routes.GameController.stream(game).toString)");
-                var boardTag = document.getElementById("board");
-                var fpsTag = document.getElementById("fps");
-                var times = [];
-                var index = 0;
-                times[index++] = performance.now();
+                const source = new EventSource('@Html(routes.GameController.stream(game).toString)');
+
+                const boardElem = document.getElementById('board');
                 source.addEventListener('message', function (event) {
-                    boardTag.innerHTML = event.data;
-                    var now = performance.now();
-                    times[index] = now;
-                    var then = times[(index + 1) % times.length];
-                    index = (index + 1) % 100;
-                    var fps = 1e3 * times.length / (now - then)
-                    fpsTag.innerHTML = "FPS: " + fps.toFixed(1);
+                    let buffer = '';
+                    for (const c of event.data) {
+                        switch (c) {
+                            case ' ':
+                                buffer += '<i class="d"></i>';
+                                break;
+                            case '*':
+                                buffer += '<i class="l"></i>';
+                                break;
+                            case '+':
+                                buffer += '<i class="b"></i>';
+                                break;
+                            default:
+                                buffer += c;
+                        }
+                    }
+                    boardElem.innerHTML = buffer;
+                });
+
+                const statsElem = document.getElementById('stats');
+                let timing = [];
+                let generation = 0, index = 0;
+                source.addEventListener('message', function (event) {
+                    const now = performance.now();
+                    timing[index++] = now;
+                    index %= 100;
+                    if (10 <= ++generation) {
+                        const then = timing[index % timing.length], rate = 1e3 * timing.length / (now - then);
+                        statsElem.innerHTML = `Generation: ${generation}<br/>Server-Sent Events / Second: ${rate.toFixed(1)}`;
+                    } else {
+                        statsElem.innerHTML = `Generation: ${generation}`;
+                    }
                 });
                 source.addEventListener('close', function (event) {
-                    source.close();
+                    timing = [];
+                    generation = index = 0;
                 });
             }
     </script>

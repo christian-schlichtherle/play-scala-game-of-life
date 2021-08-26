@@ -1,7 +1,7 @@
 package models
 
-import com.typesafe.config.Config
 import models.Game.SetupPredicate
+import play.api.Configuration
 import play.api.mvc.QueryStringBindable
 
 import java.util.Locale
@@ -11,17 +11,12 @@ import scala.reflect.runtime.currentMirror
 import scala.tools.reflect.ToolBox
 import scala.util.Try
 
-final case class Game(rows: Int, columns: Int, generations: Option[Int], setup: SetupPredicate = Game.random)
-  extends Grid {
+final case class Game(cols: Int, rows: Int, setup: SetupPredicate = Game.random) extends Grid {
 
   require(rows >= 2)
-  require(columns >= 2)
-  generations.foreach(g => require(g > 0))
+  require(cols >= 2)
 
-  def iterator: Iterator[Board] = {
-    val it = Iterator.iterate(Board())(_.next)
-    generations.map(it.take).getOrElse(it)
-  }
+  def iterator: Iterator[Board] = Iterator.iterate(Board())(_.next)
 
   final case class Board private(cells: BitSet, generation: Int) {
 
@@ -46,7 +41,7 @@ final case class Game(rows: Int, columns: Int, generations: Option[Int], setup: 
   object Board {
 
     def apply(): Board = {
-      val cells = allPositions.filter(p => setup(p.row, p.column)).foldLeft(BitSet.empty)(_ + _.index)
+      val cells = allPositions.filter(p => setup(p.row, p.col)).foldLeft(BitSet.empty)(_ + _.index)
         .ensuring(cells => cells.isEmpty || (0 <= cells.min && cells.max < size))
       new Board(cells, 1)
     }
@@ -57,11 +52,11 @@ object Game {
 
   type SetupPredicate = (Int, Int) => Boolean
 
-  def apply(config: Config): Game = {
+  def apply(config: Configuration): Game = {
     import config._
 
     def setup: SetupPredicate = {
-      getString("setup").toLowerCase(Locale.ENGLISH) match {
+      get[String]("setup").toLowerCase(Locale.ENGLISH) match {
         case "random" => Game.random
         case "blinkers" => Game.blinkers
         case other => evaluate("($r: Int, $c: Int) => { " + other + " }: Boolean")
@@ -69,9 +64,8 @@ object Game {
     }
 
     Game(
-      rows = getInt("rows"),
-      columns = getInt("columns"),
-      generations = Some(getInt("generations")).filter(_ > 0),
+      cols = get[Int]("cols"),
+      rows = get[Int]("rows"),
       setup = setup
     )
   }
@@ -85,19 +79,16 @@ object Game {
   implicit object gameBinder extends QueryStringBindable[Game] {
 
     private val intBinder = implicitly[QueryStringBindable[Int]]
-    private val optionIntBinder = implicitly[QueryStringBindable[Option[Int]]]
 
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Game]] = {
       for {
-        rows <- intBinder.bind(key + ".rows", params)
-        colums <- intBinder.bind(key + ".columns", params)
-        generations <- optionIntBinder.bind(key + ".generations", params)
+        cols <- intBinder.bind("cols", params)
+        rows <- intBinder.bind("rows", params)
       } yield {
         for {
+          c <- cols
           r <- rows
-          c <- colums
-          g <- generations
-          game <- Try(Game(rows = r, columns = c, generations = g)).toEither.left.map(_.toString)
+          game <- Try(Game(cols = c, rows = r)).toEither.left.map(_.toString)
         } yield {
           game
         }
@@ -106,9 +97,7 @@ object Game {
 
     override def unbind(key: String, value: Game): String = {
       import value._
-      intBinder.unbind(key + ".rows", rows) +
-        "&" + intBinder.unbind(key + ".columns", columns) +
-        generations.map("&" + intBinder.unbind(key + ".generations", _)).getOrElse("")
+      intBinder.unbind("cols", cols) + "&" + intBinder.unbind("rows", rows)
     }
   }
 

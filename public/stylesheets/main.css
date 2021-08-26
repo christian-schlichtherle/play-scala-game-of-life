@@ -1,10 +1,29 @@
 body {
     background-color: black;
-    color: #00ff00;
-    margin: 0;
+    color: white;
 }
 
 pre {
     line-height: 100%;
-    margin: 0;
+}
+
+pre i {
+    font-style: normal;
+}
+
+#stats {
+    font-weight: bold;
+}
+
+.b:before {
+    content: '😁';
+}
+
+.l:before {
+    content: '😎';
+}
+
+.d:before {
+    content: '💀';
+    visibility: hidden;
 }

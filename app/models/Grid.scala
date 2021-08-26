@@ -5,35 +5,35 @@ package models
   */
 trait Grid {
 
+  val cols: Int
+
   val rows: Int
 
-  val columns: Int
-
-  lazy val size: Int = rows * columns
+  lazy val size: Int = rows * cols
 
   lazy val allPositions: Iterable[Position] = {
     for {
+      col <- 0 until cols
       row <- 0 until rows
-      column <- 0 until columns
     } yield {
-      Position(row, column)
+      Position(col, row)
     }
   }
 
   /** A position has a row, a column and an index with iterable neighbor positions. */
-  final case class Position private(row: Int, column: Int) {
+  final case class Position private(col: Int, row: Int) {
 
-    val index: Int = row * columns + column
+    val index: Int = row * cols + col
 
     lazy val allNeighborPositions: Iterable[Position] = {
       for {
+        colOffset <- -1 to 1
         rowOffset <- -1 to 1
-        columnOffset <- -1 to 1
-        if rowOffset != 0 || columnOffset != 0
+        if colOffset != 0 || rowOffset != 0
       } yield {
         Position(
-          row = (rows + row + rowOffset) % rows,
-          column = (columns + column + columnOffset) % columns
+          col = (cols + col + colOffset) % cols,
+          row = (rows + row + rowOffset) % rows
         )
       }
     }
