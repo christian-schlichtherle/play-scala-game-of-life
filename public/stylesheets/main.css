@@ -1,15 +1,16 @@
 body {
     background-color: black;
-    color: white;
+    color: #00ff00;
+    overflow: hidden;
 }
 
-pre#board {
+#board {
     font-size: 1.66em;
     font-style: normal;
     line-height: 100%;
 }
 
-pre#board i {
+#board i {
     font-style: normal;
 }
 

@@ -1,10 +1,9 @@
 package controllers
 
 import akka.stream.scaladsl._
+import config.GameConfig
 import controllers.GameController.close
 import models.Game
-import models.Game.Setup
-import play.api.Configuration
 import play.api.http.ContentTypes
 import play.api.libs.EventSource.Event
 import play.api.mvc._
@@ -15,21 +14,21 @@ import scala.util.chaining._
 
 trait GameController extends BaseController {
 
-  protected val config: Configuration
-
-  protected val setup: Setup
+  protected val config: GameConfig
 
   import config._
 
-  def boards(game: Option[Game]): Action[AnyContent] = Action {
-    game.map { game =>
-      Ok(views.html.boards(game))
+  def index(secs: Option[Int]): Action[AnyContent] = Action { implicit request =>
+    secs.map { secs =>
+      Ok(views.html.boards(fps, secs))
     }.getOrElse {
-      Redirect(routes.GameController.boards(Some(Game(config))))
+      Redirect(routes.GameController.index(Some(config.secs)))
     }
   }
 
-  def stream(game: Game): Action[AnyContent] = Action {
+  def stream(cols: Int, rows: Int, secs: Int): Action[AnyContent] = Action {
+    val game = Game(cols = cols, rows = rows)
+
     def render(prev: game.Board, next: game.Board) = Event[String](BoardRenderer(game)(prev, next))
 
     val boards = Source
@@ -39,8 +38,8 @@ trait GameController extends BaseController {
       .map(_.head)
       .sliding(2)
       .map { case Seq(prev, next) => render(prev, next) }
-      .throttle(get[Int]("fps"), 1.second)
-      .takeWithin(game.secs.seconds)
+      .throttle(fps, 1.second)
+      .takeWithin(secs.seconds)
     Ok.chunked(boards.concat(close), Some(ContentTypes.EVENT_STREAM))
   }
 }

@@ -1,13 +1,10 @@
 package models
 
 import models.Game.Setup
-import play.api.Configuration
-import play.api.mvc.QueryStringBindable
 
 import scala.collection.immutable.BitSet
-import scala.util.Try
 
-final case class Game(cols: Int, rows: Int, secs: Int) extends Grid {
+final case class Game(cols: Int, rows: Int) extends Grid {
 
   require(rows >= 2)
   require(cols >= 2)
@@ -49,40 +46,4 @@ final case class Game(cols: Int, rows: Int, secs: Int) extends Grid {
 object Game {
 
   type Setup = (Int, Int) => Boolean
-
-  def apply(config: Configuration): Game = {
-    import config._
-    Game(
-      cols = get[Int]("cols"),
-      rows = get[Int]("rows"),
-      secs = get[Int]("secs"),
-    )
-  }
-
-  implicit object gameBinder extends QueryStringBindable[Game] {
-
-    private val intBinder = implicitly[QueryStringBindable[Int]]
-
-    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Game]] = {
-      for {
-        cols <- intBinder.bind("cols", params)
-        rows <- intBinder.bind("rows", params)
-        secs <- intBinder.bind("secs", params)
-      } yield {
-        for {
-          c <- cols
-          r <- rows
-          s <- secs
-          game <- Try(Game(cols = c, rows = r, secs = s)).toEither.left.map(_.toString)
-        } yield {
-          game
-        }
-      }
-    }
-
-    override def unbind(key: String, value: Game): String = {
-      import value._
-      intBinder.unbind("cols", cols) + "&" + intBinder.unbind("rows", rows) + "&" + intBinder.unbind("secs", secs)
-    }
-  }
 }

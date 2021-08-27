@@ -3,7 +3,7 @@
 # https://www.playframework.com/documentation/latest/ScalaRouting
 # ~~~~
 
-GET        /                     controllers.GameController.boards(g: Option[models.Game])
-GET        /stream               controllers.GameController.stream(g: models.Game)
+GET        /                     controllers.GameController.index(secs: Option[Int])
+GET        /stream               controllers.GameController.stream(cols: Int, rows: Int, secs: Int)
 
 GET        /assets/*file         controllers.Assets.versioned(path="/public", file: Asset)
