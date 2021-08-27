@@ -13,18 +13,10 @@
                 source.addEventListener('message', function (event) {
                     let buffer = '';
                     for (const c of event.data) {
-                        switch (c) {
-                            case ' ':
-                                buffer += '<i class="d"></i>';
-                                break;
-                            case '*':
-                                buffer += '<i class="l"></i>';
-                                break;
-                            case '+':
-                                buffer += '<i class="b"></i>';
-                                break;
-                            default:
-                                buffer += c;
+                        if ('A' <= c && c <= 'Z') {
+                            buffer += `<i class="${c}"></i>`;
+                        } else {
+                            buffer += c;
                         }
                     }
                     boardElem.innerHTML = buffer;
@@ -39,7 +31,7 @@
                     index %= 100;
                     if (10 <= ++generation) {
                         const then = timing[index % timing.length], rate = 1e3 * timing.length / (now - then);
-                        statsElem.innerHTML = `Generation: ${generation}<br/>Server-Sent Events / Second: ${rate.toFixed(1)}`;
+                        statsElem.innerHTML = `Generation: ${generation}<br/>Events / Second: ${rate.toFixed(1)}`;
                     } else {
                         statsElem.innerHTML = `Generation: ${generation}`;
                     }

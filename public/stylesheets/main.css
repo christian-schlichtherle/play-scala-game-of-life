@@ -3,11 +3,13 @@ body {
     color: white;
 }
 
-pre {
+pre#board {
+    font-size: 1.66em;
+    font-style: normal;
     line-height: 100%;
 }
 
-pre i {
+pre#board i {
     font-style: normal;
 }
 
@@ -15,15 +17,24 @@ pre i {
     font-weight: bold;
 }
 
-.b:before {
+.E:before { /* empty */
+    content: '👻';
+    visibility: hidden;
+}
+
+.B:before { /* born */
     content: '😁';
 }
 
-.l:before {
+.L:before { /* live */
     content: '😎';
 }
 
-.d:before {
+.P:before { /* party */
+    content: '🥳';
+}
+
+.D:before { /* dead */
     content: '💀';
-    visibility: hidden;
+    opacity: 0.5;
 }

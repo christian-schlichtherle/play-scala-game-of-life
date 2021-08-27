@@ -31,18 +31,18 @@ trait GameController extends BaseController {
   }
 
   def stream(game: Game): Action[AnyContent] = Action {
-    def view(prev: game.Board, next: game.Board) = Event[String](BoardRenderer(game)(prev, next))
+    def render(prev: game.Board, next: game.Board) = Event[String](BoardRenderer(game)(prev, next))
 
-    val events = Source
+    val boards = Source
       .fromIterator(() => game.iterator)
       .sliding(3)
       .takeWhile(_.map(_.cells).pipe(s => s.size == s.distinct.size)) // not only blinkers
       .map(_.head)
       .sliding(2)
-      .map { case Seq(prev, next) => view(prev, next) }
+      .map { case Seq(prev, next) => render(prev, next) }
       .throttle(get[Int]("fps"), 1.second)
-      .takeWithin(get[Int]("secs").seconds)
-    Ok.chunked(events.concat(close), Some(ContentTypes.EVENT_STREAM))
+      .takeWithin(game.secs.seconds)
+    Ok.chunked(boards.concat(close), Some(ContentTypes.EVENT_STREAM))
   }
 }
 

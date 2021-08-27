@@ -11,7 +11,7 @@ import scala.reflect.runtime.currentMirror
 import scala.tools.reflect.ToolBox
 import scala.util.Try
 
-final case class Game(cols: Int, rows: Int, setup: SetupPredicate = Game.random) extends Grid {
+final case class Game(cols: Int, rows: Int, secs: Int, setup: SetupPredicate) extends Grid {
 
   require(rows >= 2)
   require(cols >= 2)
@@ -28,12 +28,14 @@ final case class Game(cols: Int, rows: Int, setup: SetupPredicate = Game.random)
     }
 
     private def nextAlive(position: Position) = {
-      position.allNeighborPositions.count(alive) match {
+      neighborCount(position) match {
         case 2 => alive(position)
         case 3 => true
         case _ => false
       }
     }
+
+    def neighborCount(position: Position): Int = position.neighborPositions.count(alive)
 
     def alive(position: Position): Boolean = cells(position.index)
   }
@@ -41,7 +43,7 @@ final case class Game(cols: Int, rows: Int, setup: SetupPredicate = Game.random)
   object Board {
 
     def apply(): Board = {
-      val cells = allPositions.filter(p => setup(p.row, p.col)).foldLeft(BitSet.empty)(_ + _.index)
+      val cells = allPositions.filter(p => setup(p.col, p.row)).foldLeft(BitSet.empty)(_ + _.index)
         .ensuring(cells => cells.isEmpty || (0 <= cells.min && cells.max < size))
       new Board(cells, 1)
     }
@@ -66,6 +68,7 @@ object Game {
     Game(
       cols = get[Int]("cols"),
       rows = get[Int]("rows"),
+      secs = get[Int]("secs"),
       setup = setup
     )
   }
@@ -84,11 +87,13 @@ object Game {
       for {
         cols <- intBinder.bind("cols", params)
         rows <- intBinder.bind("rows", params)
+        secs <- intBinder.bind("secs", params)
       } yield {
         for {
           c <- cols
           r <- rows
-          game <- Try(Game(cols = c, rows = r)).toEither.left.map(_.toString)
+          s <- secs
+          game <- Try(Game(cols = c, rows = r, secs = s, setup = random)).toEither.left.map(_.toString)
         } yield {
           game
         }
@@ -97,11 +102,11 @@ object Game {
 
     override def unbind(key: String, value: Game): String = {
       import value._
-      intBinder.unbind("cols", cols) + "&" + intBinder.unbind("rows", rows)
+      intBinder.unbind("cols", cols) + "&" + intBinder.unbind("rows", rows) + "&" + intBinder.unbind("secs", secs)
     }
   }
 
-  def random(row: Int, column: Int): Boolean = ThreadLocalRandom.current.nextBoolean()
+  def random(col: Int, row: Int): Boolean = ThreadLocalRandom.current.nextBoolean()
 
-  def blinkers(row: Int, column: Int): Boolean = row % 4 == 1 && column % 4 < 3
+  def blinkers(col: Int, row: Int): Boolean = row % 4 == 1 && col % 4 < 3
 }

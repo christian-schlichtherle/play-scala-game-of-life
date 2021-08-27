@@ -25,7 +25,7 @@ trait Grid {
 
     val index: Int = row * cols + col
 
-    lazy val allNeighborPositions: Iterable[Position] = {
+    lazy val neighborPositions: Iterable[Position] = {
       for {
         colOffset <- -1 to 1
         rowOffset <- -1 to 1

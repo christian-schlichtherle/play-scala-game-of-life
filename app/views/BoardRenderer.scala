@@ -4,9 +4,11 @@ import models.Game
 
 object BoardRenderer {
 
-  private val BornCell = '+'
-  private val LiveCell = '*'
-  private val DeadCell = ' '
+  private val EmptyCell = 'E'
+  private val BornCell = 'B'
+  private val LiveCell = 'L'
+  private val PartyCell = 'P'
+  private val DeadCell = 'D'
   private val LineSeparator = '\n'
 
   def apply(game: Game)(prev: game.Board, next: game.Board): String = {
@@ -22,7 +24,14 @@ object BoardRenderer {
     allRows.foreach { row =>
       allColumns.foreach { column =>
         val p = Position(column, row)
-        append(if (!next.alive(p)) DeadCell else if (prev.alive(p)) LiveCell else BornCell)
+        append {
+          prev.alive(p) -> next.alive(p) match {
+            case false -> false => EmptyCell
+            case false -> true => BornCell
+            case true -> false => DeadCell
+            case true -> true => if (next.neighborCount(p) >= 3) PartyCell else LiveCell
+          }
+        }
       }
       append(LineSeparator)
     }
