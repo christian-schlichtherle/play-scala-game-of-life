@@ -1,7 +1,7 @@
 import _root_.controllers._
 import bali.Module
 import bali.scala.make
-import models.ModelModule
+import config.ConfigModule
 import play.api.ApplicationLoader.Context
 import play.api._
 import play.api.routing.Router
@@ -28,4 +28,4 @@ final class MainComponents(context: Context)
 }
 
 @Module
-trait MainModule extends ControllerModule with ModelModule
+trait MainModule extends ConfigModule with ControllerModule

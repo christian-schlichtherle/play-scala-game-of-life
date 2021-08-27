@@ -1,9 +1,9 @@
 package controllers
 
 import akka.stream.scaladsl._
-import bali.Lookup
 import controllers.GameController.close
 import models.Game
+import models.Game.Setup
 import play.api.Configuration
 import play.api.http.ContentTypes
 import play.api.libs.EventSource.Event
@@ -15,10 +15,9 @@ import scala.util.chaining._
 
 trait GameController extends BaseController {
 
-  protected def game(config: Configuration): Game
-
-  @Lookup("gameConfig")
   protected val config: Configuration
+
+  protected val setup: Setup
 
   import config._
 
@@ -26,7 +25,7 @@ trait GameController extends BaseController {
     game.map { game =>
       Ok(views.html.boards(game))
     }.getOrElse {
-      Redirect(routes.GameController.boards(Some(this.game(config))))
+      Redirect(routes.GameController.boards(Some(Game(config))))
     }
   }
 
@@ -34,7 +33,7 @@ trait GameController extends BaseController {
     def render(prev: game.Board, next: game.Board) = Event[String](BoardRenderer(game)(prev, next))
 
     val boards = Source
-      .fromIterator(() => game.iterator)
+      .fromIterator(() => game.start(setup))
       .sliding(3)
       .takeWhile(_.map(_.cells).pipe(s => s.size == s.distinct.size)) // not only blinkers
       .map(_.head)

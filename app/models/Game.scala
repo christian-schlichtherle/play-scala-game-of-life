@@ -1,22 +1,18 @@
 package models
 
-import models.Game.SetupPredicate
+import models.Game.Setup
 import play.api.Configuration
 import play.api.mvc.QueryStringBindable
 
-import java.util.Locale
-import java.util.concurrent.ThreadLocalRandom
 import scala.collection.immutable.BitSet
-import scala.reflect.runtime.currentMirror
-import scala.tools.reflect.ToolBox
 import scala.util.Try
 
-final case class Game(cols: Int, rows: Int, secs: Int, setup: SetupPredicate) extends Grid {
+final case class Game(cols: Int, rows: Int, secs: Int) extends Grid {
 
   require(rows >= 2)
   require(cols >= 2)
 
-  def iterator: Iterator[Board] = Iterator.iterate(Board())(_.next)
+  def start(setup: Setup): Iterator[Board] = Iterator.iterate(Board(setup))(_.next)
 
   final case class Board private(cells: BitSet, generation: Int) {
 
@@ -40,9 +36,9 @@ final case class Game(cols: Int, rows: Int, secs: Int, setup: SetupPredicate) ex
     def alive(position: Position): Boolean = cells(position.index)
   }
 
-  object Board {
+  private object Board {
 
-    def apply(): Board = {
+    def apply(setup: Setup): Board = {
       val cells = allPositions.filter(p => setup(p.col, p.row)).foldLeft(BitSet.empty)(_ + _.index)
         .ensuring(cells => cells.isEmpty || (0 <= cells.min && cells.max < size))
       new Board(cells, 1)
@@ -52,31 +48,15 @@ final case class Game(cols: Int, rows: Int, secs: Int, setup: SetupPredicate) ex
 
 object Game {
 
-  type SetupPredicate = (Int, Int) => Boolean
+  type Setup = (Int, Int) => Boolean
 
   def apply(config: Configuration): Game = {
     import config._
-
-    def setup: SetupPredicate = {
-      get[String]("setup").toLowerCase(Locale.ENGLISH) match {
-        case "random" => Game.random
-        case "blinkers" => Game.blinkers
-        case other => evaluate("($r: Int, $c: Int) => { " + other + " }: Boolean")
-      }
-    }
-
     Game(
       cols = get[Int]("cols"),
       rows = get[Int]("rows"),
       secs = get[Int]("secs"),
-      setup = setup
     )
-  }
-
-  private def evaluate[A](string: String): A = {
-    val tb = currentMirror.mkToolBox()
-    val tree = tb.parse(string)
-    tb.eval(tree).asInstanceOf[A]
   }
 
   implicit object gameBinder extends QueryStringBindable[Game] {
@@ -93,7 +73,7 @@ object Game {
           c <- cols
           r <- rows
           s <- secs
-          game <- Try(Game(cols = c, rows = r, secs = s, setup = random)).toEither.left.map(_.toString)
+          game <- Try(Game(cols = c, rows = r, secs = s)).toEither.left.map(_.toString)
         } yield {
           game
         }
@@ -105,8 +85,4 @@ object Game {
       intBinder.unbind("cols", cols) + "&" + intBinder.unbind("rows", rows) + "&" + intBinder.unbind("secs", secs)
     }
   }
-
-  def random(col: Int, row: Int): Boolean = ThreadLocalRandom.current.nextBoolean()
-
-  def blinkers(col: Int, row: Int): Boolean = row % 4 == 1 && col % 4 < 3
 }
