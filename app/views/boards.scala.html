@@ -38,10 +38,10 @@
                             const then = timing[index % timing.length], rate = 1e3 * timing.length / (now - then);
                             stats = `Generation: ${generation}<br/>Events / Second: ${rate.toFixed(1)}`;
                         } else {
-                            stats = `Generation: ${generation}`;
+                            stats = `Generation: ${generation}<br/>&nbsp;`;
                         }
                         statsElem.innerHTML = stats;
-                        statsElem.setAttribute("style", 'padding-left:' + Math.abs((generation / @(fps / 2) +80) % 160 - 80) + '%');
+                        statsElem.setAttribute("style", 'padding-left:' + Math.abs((generation / @fps + 80) % 160 - 80) + '%');
                     }
 
                     function resetStats() {
@@ -63,9 +63,8 @@
                     }
 
                     const cellElem = document.querySelector('#cell');
-                    const boardHeight = boardElem.offsetHeight;
-                    const cellWidth = cellElem.offsetWidth;
-                    const statsHeight = statsElem.offsetHeight;
+                    const height = boardElem.offsetHeight;
+                    const width = cellElem.offsetWidth;
                     let pendingUpdate = false;
 
                     function viewportHandler() {
@@ -77,8 +76,8 @@
                         requestAnimationFrame(() => {
                             pendingUpdate = false;
 
-                            let cols = Math.floor(visualViewport.width / cellWidth);
-                            let rows = Math.floor((visualViewport.height - statsHeight) / boardHeight) - 2;
+                            let cols = Math.floor(visualViewport.width / width);
+                            let rows = Math.floor(visualViewport.height / height);
 
                             resetSource(cols, rows);
                         });

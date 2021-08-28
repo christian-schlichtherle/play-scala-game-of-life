@@ -1,13 +1,19 @@
 body {
     background-color: black;
     color: #00ff00;
+    margin: 0;
     overflow: hidden;
+    padding: 0;
+}
+
+pre {
+    margin: 0;
+    padding: 0;
 }
 
 #board {
     font-size: 1.66em;
     font-style: normal;
-    line-height: 100%;
 }
 
 #board i {
@@ -16,6 +22,9 @@ body {
 
 #stats {
     font-weight: bold;
+    position: absolute;
+    transform: translate(0, -100%);
+    -ms-transform: translate(0, -100%);
 }
 
 .E:before { /* empty */
