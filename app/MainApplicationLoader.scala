@@ -1,10 +1,11 @@
-import _root_.controllers._
-import bali.Module
+import bali._
 import bali.scala.make
 import config.ConfigModule
-import play.api.ApplicationLoader.Context
+import controllers._
+import play.api.ApplicationLoader._
 import play.api._
-import play.api.mvc.EssentialFilter
+import play.api.inject.ApplicationLifecycle
+import play.api.mvc._
 import play.api.routing.Router
 import play.filters.HttpFiltersComponents
 import play.filters.gzip.GzipFilterComponents
@@ -12,29 +13,49 @@ import router.Routes
 
 final class MainApplicationLoader extends ApplicationLoader {
 
-  override def load(context: Context): Application = new MainComponents(context).application
+  override def load(context: Context): Application = make[MainComponents].application
 }
 
-final class MainComponents(context: Context)
-  extends BuiltInComponentsFromContext(context)
-    with AssetsComponents
+@Module
+trait MainComponents
+  extends AssetsComponents
+    with BuiltInComponentsWithContext
+    with ConfigModule
+    with ControllerModule
     with GzipFilterComponents
     with HttpFiltersComponents {
 
-  override def httpFilters: Seq[EssentialFilter] = {
-    Seq(csrfFilter, gzipFilter, securityHeadersFilter, allowedHostsFilter)
-  }
+  @Lookup
+  val context: Context
 
-  lazy val module: MainModule = make[MainModule]
+  final override lazy val httpFilters: Seq[EssentialFilter] = super[HttpFiltersComponents].httpFilters :+ gzipFilter
 
-  import module._
-
-  override lazy val router: Router = new Routes(
+  final override lazy val router: Router = new Routes(
     Assets_1 = assets,
     GameController_0 = gameController,
     errorHandler = httpErrorHandler,
   )
 }
 
-@Module
-trait MainModule extends ConfigModule with ControllerModule
+// TODO: Send PR to Play Framework for this:
+trait BuiltInComponentsWithContext extends BuiltInComponents {
+
+  def context: Context
+
+  override def environment: Environment = context.environment
+
+  override def devContext: Option[DevContext] = context.devContext
+
+  override def applicationLifecycle: ApplicationLifecycle = context.lifecycle
+
+  override def configuration: Configuration = context.initialConfiguration
+
+  lazy val controllerComponents: ControllerComponents = DefaultControllerComponents(
+    defaultActionBuilder,
+    playBodyParsers,
+    messagesApi,
+    langs,
+    fileMimeTypes,
+    executionContext
+  )
+}
