@@ -10,83 +10,90 @@
                 document.getElementById('board').innerHTML =
                         "Sorry. This browser doesn't seem to support server sent events. Check <a href='http://html5test.com/compare/feature/communication-eventSource.html'>html5test</a> for browser compatibility.";
             } else {
-                (function () {
-                    const boardElem = document.querySelector('#board');
-                    const statsElem = document.querySelector('#stats');
+                const OnResize = function () {
 
-                    function updateBoard(event) {
-                        let buffer = '';
-                        for (const c of event.data) {
-                            if ('A' <= c && c <= 'Z') {
-                                buffer += `<i class="${c}"></i>`;
-                            } else {
-                                buffer += c;
+                    const board = new function () {
+                        this.elem = document.querySelector('#board');
+
+                        this.update = event => {
+                            let buffer = '';
+                            for (const c of event.data) {
+                                if ('A' <= c && c <= 'Z') {
+                                    buffer += `<i class="${c}"></i>`;
+                                } else {
+                                    buffer += c;
+                                }
                             }
+                            board.elem.innerHTML = buffer;
                         }
-                        boardElem.innerHTML = buffer;
-                    }
+                    };
 
-                    let timing = [];
-                    let generation = 0, index = 0;
+                    const stats = new function() {
+                        const statsElem = document.querySelector('#stats');
+                        let timing, generation, index;
 
-                    function updateStats() {
-                        const now = performance.now();
-                        timing[index++] = now;
-                        index %= 100;
-                        let stats;
-                        if (10 <= ++generation) {
-                            const then = timing[index % timing.length], rate = 1e3 * timing.length / (now - then);
-                            stats = `Generation: ${generation}<br/>Events / Second: ${rate.toFixed(1)}`;
-                        } else {
-                            stats = `Generation: ${generation}<br/>&nbsp;`;
+                        this.update = () => {
+                            const now = performance.now();
+                            timing[index++] = now;
+                            index %= @fps;
+                            let stats;
+                            if (@fps <= ++generation) {
+                                const then = timing[index % timing.length];
+                                const rate = 1e3 * timing.length / (now - then);
+                                stats = `Generation: ${generation}<br/>Generations / Second: ${rate.toFixed(1)}`;
+                            } else {
+                                stats = `Generation: ${generation}<br/>&nbsp;`;
+                            }
+                            statsElem.innerHTML = stats;
+                            statsElem.setAttribute("style", 'left:' + Math.abs((generation / @fps + 80) % 160 - 80) + '%');
+                        };
+
+                        this.reset = () => {
+                            timing = new Array(@fps);
+                            generation = index = 0;
+                        };
+
+                        this.reset();
+                    };
+
+                    const source = new function() {
+                        let es;
+
+                        this.reset = (cols, rows) => {
+                            if (es) {
+                                es.close();
+                                stats.reset();
+                            }
+                            es = new EventSource(jsRoutes.controllers.GameController.stream(cols, rows, @secs).url);
+                            es.addEventListener('message', board.update);
+                            es.addEventListener('message', stats.update);
+                            es.addEventListener('close', stats.reset);
                         }
-                        statsElem.innerHTML = stats;
-                        statsElem.setAttribute("style", 'padding-left:' + Math.abs((generation / @fps + 80) % 160 - 80) + '%');
-                    }
+                    };
 
-                    function resetStats() {
-                        timing = [];
-                        generation = index = 0;
-                    }
+                    return new function() {
+                        const width = document.querySelector('#cell').offsetWidth;
+                        const height = board.elem.offsetHeight;
+                        let pendingUpdate = false;
 
-                    let source;
+                        return () => {
+                            if (pendingUpdate) {
+                                return;
+                            }
+                            pendingUpdate = true;
 
-                    function resetSource(cols, rows) {
-                        if (source) {
-                            source.close();
-                            resetStats();
+                            requestAnimationFrame(() => {
+                                pendingUpdate = false;
+
+                                let cols = Math.floor(visualViewport.width / width);
+                                let rows = Math.floor(visualViewport.height / height);
+
+                                source.reset(cols, rows);
+                            });
                         }
-                        source = new EventSource(jsRoutes.controllers.GameController.stream(cols, rows, @secs).url);
-                        source.addEventListener('message', updateBoard);
-                        source.addEventListener('message', updateStats);
-                        source.addEventListener('close', resetStats);
-                    }
-
-                    const cellElem = document.querySelector('#cell');
-                    const height = boardElem.offsetHeight;
-                    const width = cellElem.offsetWidth;
-                    let pendingUpdate = false;
-
-                    function viewportHandler() {
-                        if (pendingUpdate) {
-                            return;
-                        }
-                        pendingUpdate = true;
-
-                        requestAnimationFrame(() => {
-                            pendingUpdate = false;
-
-                            let cols = Math.floor(visualViewport.width / width);
-                            let rows = Math.floor(visualViewport.height / height);
-
-                            resetSource(cols, rows);
-                        });
-                    }
-
-                    visualViewport.onresize = viewportHandler;
-
-                    viewportHandler();
-                })();
+                    };
+                };
+                (visualViewport.onresize = new OnResize())();
             }
     </script>
 }
