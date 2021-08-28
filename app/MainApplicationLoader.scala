@@ -4,7 +4,10 @@ import bali.scala.make
 import config.ConfigModule
 import play.api.ApplicationLoader.Context
 import play.api._
+import play.api.mvc.EssentialFilter
 import play.api.routing.Router
+import play.filters.HttpFiltersComponents
+import play.filters.gzip.GzipFilterComponents
 import router.Routes
 
 final class MainApplicationLoader extends ApplicationLoader {
@@ -15,9 +18,15 @@ final class MainApplicationLoader extends ApplicationLoader {
 final class MainComponents(context: Context)
   extends BuiltInComponentsFromContext(context)
     with AssetsComponents
-    with NoHttpFiltersComponents {
+    with GzipFilterComponents
+    with HttpFiltersComponents {
+
+  override def httpFilters: Seq[EssentialFilter] = {
+    Seq(csrfFilter, gzipFilter, securityHeadersFilter, allowedHostsFilter)
+  }
 
   lazy val module: MainModule = make[MainModule]
+
   import module._
 
   override lazy val router: Router = new Routes(
