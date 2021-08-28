@@ -44,22 +44,22 @@
                         statsElem.setAttribute("style", 'padding-left:' + Math.abs((generation / @(fps / 2) +80) % 160 - 80) + '%');
                     }
 
-                    function clearStats() {
+                    function resetStats() {
                         timing = [];
                         generation = index = 0;
                     }
 
                     let source;
 
-                    function restartSource(cols, rows) {
+                    function resetSource(cols, rows) {
                         if (source) {
                             source.close();
-                            clearStats();
+                            resetStats();
                         }
                         source = new EventSource(jsRoutes.controllers.GameController.stream(cols, rows, @secs).url);
                         source.addEventListener('message', updateBoard);
                         source.addEventListener('message', updateStats);
-                        source.onclose = clearStats;
+                        source.addEventListener('close', resetStats);
                     }
 
                     const cellElem = document.querySelector('#cell');
@@ -80,7 +80,7 @@
                             let cols = Math.floor(visualViewport.width / cellWidth);
                             let rows = Math.floor((visualViewport.height - statsHeight) / boardHeight) - 2;
 
-                            restartSource(cols, rows);
+                            resetSource(cols, rows);
                         });
                     }
 
