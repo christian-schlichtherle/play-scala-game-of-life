@@ -37,10 +37,10 @@ trait MainComponents
   )
 }
 
-// TODO: Send PR to Play Framework for this:
+// TODO: Send PR to Play Framework with this:
 trait BuiltInComponentsWithContext extends BuiltInComponents {
 
-  def context: Context
+  val context: Context
 
   override def environment: Environment = context.environment
 
