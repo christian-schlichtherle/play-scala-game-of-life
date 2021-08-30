@@ -27,24 +27,28 @@ pre {
     -ms-transform: translate(0, -100%);
 }
 
-.E:before { /* empty */
+.C:before { /* Cool */
+    content: '😎';
+}
+
+.F:before { /* Fresh */
+    content: '😃';
+}
+
+.G:before { /* Ghost */
     content: '👻';
     visibility: hidden;
 }
 
-.B:before { /* born */
-    content: '😁';
+.O:before { /* OMG */
+    content: '😳';
 }
 
-.L:before { /* live */
-    content: '😎';
-}
-
-.P:before { /* party */
+.P:before { /* Party */
     content: '🥳';
 }
 
-.D:before { /* dead */
+.S:before { /* Skull */
     content: '💀';
     opacity: 0.5;
 }

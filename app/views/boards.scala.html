@@ -1,6 +1,6 @@
 @(fps: Int, secs: Int)(implicit request: play.api.mvc.RequestHeader)
 @main("Conway's Game of Life") {
-    <pre id="board"><i id="cell" class="E"></i></pre>
+    <pre id="board"><i id="cell" class="G"></i></pre>
     <pre id="stats">&nbsp;<br/>&nbsp;</pre>
     @helper.javascriptRouter("jsRoutes")(
         routes.javascript.GameController.stream
