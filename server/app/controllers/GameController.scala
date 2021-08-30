@@ -20,7 +20,7 @@ trait GameController extends BaseController {
 
   def index(secs: Option[Int]): Action[AnyContent] = Action { implicit request =>
     secs.map { secs =>
-      Ok(views.html.boards(fps, secs))
+      Ok(views.html.page(fps, secs))
     }.getOrElse {
       Redirect(routes.GameController.index(Some(config.secs)))
     }

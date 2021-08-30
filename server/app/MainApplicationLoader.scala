@@ -19,7 +19,7 @@ final class MainApplicationLoader extends ApplicationLoader {
 @Module
 trait MainComponents
   extends AssetsComponents
-    with BuiltInComponentsWithContext
+    with ContextBasedBuiltInComponents
     with ConfigModule
     with ControllerModule
     with GzipFilterComponents
@@ -38,7 +38,7 @@ trait MainComponents
 }
 
 // TODO: Send PR to Play Framework with this:
-trait BuiltInComponentsWithContext extends BuiltInComponents {
+trait ContextBasedBuiltInComponents extends BuiltInComponents {
 
   val context: Context
 

@@ -1,0 +1,20 @@
+@(fps: Int, secs: Int)
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
+        <meta name="fps" content="@fps">
+        <meta name="secs" content="@secs">
+        <title>Conway's Game of Life</title>
+    </head>
+    <body>
+        <pre id="board"><i id="cell" class="G"></i></pre>
+        <pre id="stats">&nbsp;<br/>&nbsp;</pre>
+        @scalajs.html.scripts(
+            projectName = "client",
+            assets = name => routes.Assets.versioned(name).toString,
+            resourceExists = name => getClass.getResource(s"/public/$name") != null
+        )
+    </body>
+</html>

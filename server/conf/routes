@@ -1,9 +1,7 @@
-# Routes
-# This file defines all application routes (Higher priority routes first)
 # https://www.playframework.com/documentation/latest/ScalaRouting
-# ~~~~
 
 GET        /                     controllers.GameController.index(secs: Option[Int])
 GET        /stream               controllers.GameController.stream(cols: Int, rows: Int, secs: Int)
 
-GET        /assets/*file         controllers.Assets.versioned(path="/public", file: Asset)
+GET        /assets/*file                 controllers.Assets.at(file)
+GET        /versionedAssets/*file        controllers.Assets.versioned(path="/public", file: Asset)
