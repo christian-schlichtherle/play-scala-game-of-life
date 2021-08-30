@@ -35,7 +35,7 @@ trait GameController extends BaseController {
       .fromIterator(() => game.start(setup))
       .sliding(3)
       .takeWhile(_.map(_.cells).pipe(s => s.size == s.distinct.size)) // not only blinkers
-      .map(_.head)
+      .map(_.last)
       .sliding(2)
       .map { case Seq(prev, next) => render(prev, next) }
       .throttle(fps, 1.second)
