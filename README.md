@@ -22,7 +22,7 @@ Now, for starting the web app:
 Next, start a web browser and browse to http://localhost:9000/ .
 You should see something like this:
 
-![Still image of Conway's Game of Life](docs/images/screenshot1.png)]
+![Still image of Conway's Game of Life](docs/images/screenshot1.png)
 
 Here's a screen capture of the web app in fullscreen mode:
 
