@@ -22,4 +22,4 @@ Now, for starting the web app:
 Next, start a web browser and browse to http://localhost:9000/ .
 Click on the image below to watch a screen capture of the web app in fullscreen mode:
 
-[![Conway's Game of Life](docs/images/screenshot1.png)](blob/master/docs/images/capture1.mov)
+[![Conway's Game of Life](docs/images/screenshot1.png)](https://user-images.githubusercontent.com/1545428/131516765-b09adabe-df1a-40b4-a0e5-c9a11f30487c.mov)
